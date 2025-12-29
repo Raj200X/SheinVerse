@@ -43,9 +43,11 @@ def get_driver():
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.page_load_strategy = 'eager' # Don't wait for full page load (images, etc)
         
         # Use undetected-chromedriver
         driver = uc.Chrome(options=options)
+        driver.set_page_load_timeout(60) # Fail if page takes > 60s
         return driver
     except Exception as e:
         print(f"Failed to initialize driver: {e}")
