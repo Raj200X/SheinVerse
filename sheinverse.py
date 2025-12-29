@@ -141,5 +141,27 @@ def check_stock_count():
             driver = None
             time.sleep(5)
 
+# --- IMPORT FLASK FOR RENDER WEB SERVICE ---
+from flask import Flask
+import threading
+
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return "SheinVerse Monitor is Running! 🚀"
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+# -------------------------------------------
+
 if __name__ == "__main__":
+    # Start the dummy web server in a background thread
+    # This keeps Render happy (it needs a bound port)
+    server_thread = threading.Thread(target=run_web_server)
+    server_thread.daemon = True
+    server_thread.start()
+    
+    # Run the main monitor loop
     check_stock_count()
