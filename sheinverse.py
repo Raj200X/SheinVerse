@@ -112,12 +112,21 @@ def check_stock_count():
                         print("  -> No change.")
                 else:
                     print("  -> [WARNING] Could not find 'items found' text on page.")
-                    # Debug: print what we think might be relevant text
+                    print(f"     Title: {driver.title}")
+                    print(f"     URL: {driver.current_url}")
+                    
+                    # Check for bot detection
+                    if "access denied" in page_text.lower() or "robot" in page_text.lower():
+                        print("     [ALERT] Access Denied / Bot Detection triggered!")
+                    
+                    # Debug: print snippet
+                    print(f"     Body snippet: {page_text[:500]}...")  
+                    
                     # Search specifically for number patterns around 'items'
                     fallback_match = re.search(r'items', page_text, re.IGNORECASE)
                     if fallback_match:
-                         start = max(0, fallback_match.start() - 20)
-                         end = min(len(page_text), fallback_match.end() + 20)
+                         start = max(0, fallback_match.start() - 50)
+                         end = min(len(page_text), fallback_match.end() + 50)
                          print(f"     Context found: '...{page_text[start:end]}...'")
 
             except Exception as e:
