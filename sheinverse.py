@@ -13,7 +13,20 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "1028205933")
 
 URL = "https://www.sheinindia.in/c/sverse-5939-37961"
 
-import traceback
+from flask import Flask
+import threading
+from pyvirtualdisplay import Display # Import virtual display
+
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return "SheinVerse Monitor is Running! 🚀"
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+# -------------------------------------------
 
 def get_driver():
     try:
@@ -22,13 +35,14 @@ def get_driver():
         options.add_argument("--no-service-autorun")
         options.add_argument("--password-store=basic")
         
-        # Check if running on Server (Render/Docker)
-        if os.getenv("RENDER") or os.getenv("HEADLESS"):
-            print("Running in HEADLESS mode (Render/Server detected)")
-            options.add_argument("--headless=new")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
+        # HEADLESS MODIFICATION:
+        # We NO LONGER use --headless=new because it gets detected.
+        # Instead, we use Xvfb (via pyvirtualdisplay) to simulate a screen.
+        # This makes Chrome think it has a GUI.
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         
         # Use undetected-chromedriver
         driver = uc.Chrome(options=options)
@@ -48,6 +62,13 @@ def send_telegram_alert(message):
 
 def check_stock_count():
     print("Initializing SheinVerse Monitor...")
+    
+    # Start Virtual Display (Xvfb) for Render
+    if os.getenv("RENDER") or os.getenv("HEADLESS"):
+        print("Starting Virtual Display (Xvfb)...")
+        display = Display(visible=0, size=(1920, 1080))
+        display.start()
+    
     driver = None
     last_count = None
     
